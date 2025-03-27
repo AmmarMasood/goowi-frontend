@@ -2,15 +2,18 @@ import React from "react";
 import { Form, Input, Button, Select } from "antd";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader } from "../../components/Loader/Loader";
 
 const { Option } = Select;
 const Register = () => {
+  const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [error, setError] = React.useState(null);
   const { register } = useAuth();
 
   const onFinish = async (values) => {
+    setLoading(true);
     try {
       setError(null);
       await register(values);
@@ -19,10 +22,12 @@ const Register = () => {
       setError(error);
       console.error(error);
     }
+    setLoading(false);
   };
 
   return (
     <div className="flex flex-col items-center h-screen w-screen justify-center max-md:!px-8 overflow-y-auto">
+      <Loader show={loading} />
       <h1 className="text-5xl font-bold mb-8">Create a new account</h1>
       <Form
         name="register"

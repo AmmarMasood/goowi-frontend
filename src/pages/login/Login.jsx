@@ -1,13 +1,17 @@
 import { Button, Form, Input } from "antd";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Loader } from "../../components/Loader/Loader";
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const { login } = useAuth();
 
   const onFinish = async (values) => {
+    setLoading(true);
     try {
       await login(values.email, values.password);
       navigate("/home", { replace: true });
@@ -24,6 +28,8 @@ const Login = () => {
       ]);
       console.error(error);
     }
+
+    setLoading(false);
   };
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
@@ -31,6 +37,7 @@ const Login = () => {
 
   return (
     <div className="flex flex-col items-center h-screen w-screen justify-center">
+      <Loader show={loading} />
       <h1 className="text-5xl font-bold mb-4">Login</h1>
       <Form
         name="basic"
