@@ -97,7 +97,27 @@ const Dashboard = () => {
         }
         return wave;
       });
+      const updatedFWaves = fillteredWaves.map((wave) => {
+        if (wave._id === waveId) {
+          return {
+            ...wave,
+            participants: [
+              ...wave.participants,
+              {
+                ...userDetails,
+                userId: {
+                  firstName: userDetails.firstName,
+                  lastName: userDetails.lastName,
+                },
+              },
+            ],
+          };
+        }
+        return wave;
+      });
+      console.log("updatedWaves", updatedWaves);
       setAllWaves(updatedWaves);
+      setFilteredWaves(updatedFWaves);
     } else {
       console.error("Error participating in wave:", res.error);
     }
