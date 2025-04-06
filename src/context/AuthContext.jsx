@@ -25,7 +25,13 @@ const AuthProvider = ({ children }) => {
 
   const getUserDetails = async () => {
     const { data } = await axiosInstance.get("/auth/me");
-    setUserDetails({ ...data.user, profileExists: data.profileExists });
+    setUserDetails({
+      ...data.user,
+      userId: data.user._id,
+      _id: data.profileId,
+      profileExists: data.profileExists,
+      profilePicture: data.profilePicture,
+    });
   };
 
   const login = async (email, password) => {
@@ -55,6 +61,10 @@ const AuthProvider = ({ children }) => {
     await axiosInstance.get("auth/resent-verify-email");
   };
 
+  const updateProfileExists = async (exists) => {
+    setUserDetails((prev) => ({ ...prev, profileExists: exists }));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -64,6 +74,7 @@ const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
+        updateProfileExists,
       }}
     >
       {!loading && children}

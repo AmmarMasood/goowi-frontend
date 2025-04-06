@@ -4,7 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, message } from "antd";
 import Login from "./pages/login/Login";
 import Register from "./pages/register/Register";
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -14,8 +14,11 @@ import MainLayout from "./layouts/MainLayout";
 import Profile from "./pages/profile/Profile";
 import VerifyEmail from "./pages/verify-email/VerifyEmail";
 import PublicRoute from "./guards/PublicRoute";
+import CreateWave from "./pages/new-wave/NewWave";
 
 function App() {
+  const contextHolder = message.useMessage()[1];
+
   return (
     <ConfigProvider
       theme={{
@@ -24,6 +27,7 @@ function App() {
         },
       }}
     >
+      {contextHolder}
       <Router>
         <Routes>
           <Route
@@ -49,6 +53,16 @@ function App() {
               <PrivateRoute>
                 <MainLayout>
                   <Dashboard />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/new-wave"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <CreateWave />
                 </MainLayout>
               </PrivateRoute>
             }
