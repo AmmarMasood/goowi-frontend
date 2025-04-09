@@ -82,3 +82,14 @@ export const getWavesByParticipantId = async () => {
     return { success: false, error };
   }
 };
+
+export const getWavesByParticipantWithId = async (userId) => {
+  try {
+    const { data } = await axiosInstance.get(
+      `/waves/participant/part/users/${userId}`
+    );
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};

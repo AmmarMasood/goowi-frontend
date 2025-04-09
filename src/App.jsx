@@ -15,6 +15,7 @@ import Profile from "./pages/profile/Profile";
 import VerifyEmail from "./pages/verify-email/VerifyEmail";
 import PublicRoute from "./guards/PublicRoute";
 import CreateWave from "./pages/new-wave/NewWave";
+import PublicProfile from "./pages/public-profile/PublicProfile";
 
 function App() {
   const contextHolder = message.useMessage()[1];
@@ -86,6 +87,14 @@ function App() {
                   <CompleteRegistration />
                 </MainLayout>
               </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile/:slug"
+            element={
+              <MainLayout>
+                <PublicProfile />
+              </MainLayout>
             }
           />
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -44,3 +44,12 @@ export const getUserMetrics = async (userId) => {
     return { success: false, error };
   }
 };
+
+export const getProfileBySlug = async (slug) => {
+  try {
+    const { data } = await axiosInstance.get(`/profiles/slug/${slug}`);
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error };
+  }
+};

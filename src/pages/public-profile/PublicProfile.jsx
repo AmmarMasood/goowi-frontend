@@ -1,39 +1,34 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Avatar, Button, Tabs } from "antd";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Avatar, Tabs } from "antd";
 import Overview from "./overview/Overview";
 import SocialMetrics from "./social-metrics/SocialMetrics";
 import Skeleton from "./skeleton/Skeleton";
-import { getProfile } from "../../services/profile";
-import EditModel from "./edit-model/EditModel";
+import { getProfileBySlug } from "../../services/profile";
 import MyWaves from "./my-waves/MyWaves";
 import {
   getByCharityId,
   getCurrentUserWaves,
-  getWavesByParticipantId,
+  getWavesByParticipantWithId,
 } from "../../services/waves";
 import AssociatedWaves from "./associated-waves/AssociatedWaves";
 import SupportingCharities from "./supporting-charities/SupportingCharities";
-import { CopyOutlined } from "@ant-design/icons";
 
-const Profile = () => {
+const PublicProfile = () => {
   const navigate = useNavigate();
+  // get slug from url
+  const { slug } = useParams(); // Extract the slug from the URL
   const [searchParams] = useSearchParams(); // Get query parameters
-
-  const { userDetails } = useAuth();
-  const [showEditModel, setShowEditModel] = useState(false);
   const [profile, setProfile] = useState(null);
   const [waves, setWaves] = useState([]);
   const [charityWaves, setCharityWaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeKey, setActiveKey] = useState("1"); // State for active tab key
   const [supportingWaves, setSupportingWaves] = useState([]);
-  const [copied, setCopied] = useState(false);
 
   const fetchProfile = async () => {
     try {
-      const res = await getProfile();
+      const res = await getProfileBySlug(slug);
       if (res.success) {
         setProfile(res.data);
       } else {
@@ -47,28 +42,28 @@ const Profile = () => {
   };
 
   const fetchWave = async () => {
-    if (!userDetails) return;
-    const res = await getCurrentUserWaves(userDetails.userId);
+    if (!profile) return;
+    const res = await getCurrentUserWaves(profile?.userId?._id);
     if (res.success) {
       setWaves(res.data);
     }
   };
 
   const fetchAssociatedWaves = async () => {
-    if (!userDetails) return;
-    if (userDetails.role !== "charity") return;
-    const res = await getByCharityId(userDetails._id);
+    if (!profile) return;
+    if (profile?.userId?.role !== "charity") return;
+    const res = await getByCharityId(profile._id);
     if (res.success) {
       const associatedWaves = res.data.filter(
-        (wave) => wave.creatorId._id !== userDetails._id
+        (wave) => wave.creatorId._id !== profile._id
       );
       setCharityWaves(associatedWaves);
     }
   };
   const fetchSupportingWaves = async () => {
-    if (!userDetails) return;
+    if (!profile) return;
 
-    const res = await getWavesByParticipantId();
+    const res = await getWavesByParticipantWithId(profile.userId._id);
     if (res.success) {
       setSupportingWaves(res.data);
     }
@@ -104,19 +99,16 @@ const Profile = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (userDetails && userDetails.profileExists === false) {
-      navigate("/complete-registration", { replace: true });
-    } else if (userDetails && userDetails.profileExists === true) {
+    if (slug) {
       fetchProfile();
-      fetchWave();
-      fetchAssociatedWaves();
-      fetchSupportingWaves();
     }
-  }, [userDetails]);
+  }, []);
 
-  const onEditClick = async () => {
-    setShowEditModel(true);
-  };
+  useEffect(() => {
+    fetchWave();
+    fetchAssociatedWaves();
+    fetchSupportingWaves();
+  }, [profile]);
 
   const handleTabChange = (key) => {
     const tab =
@@ -135,7 +127,7 @@ const Profile = () => {
   };
 
   const getTabsForRole = () => {
-    switch (userDetails?.role) {
+    switch (profile?.userId?.role) {
       case "charity":
         return [
           {
@@ -154,7 +146,6 @@ const Profile = () => {
                     ? profile.certifications
                     : null
                 }
-                onEditClick={onEditClick}
               />
             ),
           },
@@ -198,7 +189,6 @@ const Profile = () => {
                     ? profile.certifications
                     : null
                 }
-                onEditClick={onEditClick}
               />
             ),
           },
@@ -210,7 +200,7 @@ const Profile = () => {
           {
             key: "3",
             label: "Social Metrics",
-            children: <SocialMetrics />,
+            children: <SocialMetrics profile={profile} />,
           },
           {
             key: "4",
@@ -223,29 +213,10 @@ const Profile = () => {
     }
   };
 
-  const handleCopy = async () => {
-    try {
-      const textToCopy = `${import.meta.env.VITE_API_FRONTEND_URL}/profile/${
-        profile.slug
-      }`; // replace with your actual profile URL
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.log("Failed to copy: ", err);
-    }
-  };
-
   return loading ? (
     <Skeleton />
   ) : (
     <div className="bg-white shadow-md rounded-xl">
-      <EditModel
-        profile={profile}
-        open={showEditModel}
-        setOpen={setShowEditModel}
-      />
       <div className="relative h-42 w-full">
         {/* Banner Image */}
         {profile?.bannerImage && (
@@ -267,7 +238,7 @@ const Profile = () => {
               <h1 className="text-4xl">{profile.name}</h1>
             ) : (
               <h1 className="text-4xl">
-                {userDetails?.firstName} {userDetails?.lastName}
+                {profile?.userId?.firstName} {profile?.userId?.lastName}
               </h1>
             )}
             <h2 className="text-xl text-blue-950">{profile?.location}</h2>
@@ -275,16 +246,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-      <div className="mt-32 p-4 relative w-full">
-        <Button
-          color="primary"
-          variant="outlined"
-          className="!absolute -top-20 right-10"
-          icon={<CopyOutlined />}
-          onClick={handleCopy}
-        >
-          {copied ? "Copied!" : "Copy My Public Profile"}
-        </Button>
+      <div className="mt-32 p-4">
         <Tabs
           defaultActiveKey="1"
           activeKey={activeKey}
@@ -297,4 +259,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default PublicProfile;
